@@ -1,0 +1,20 @@
+[package]
+name = "myca"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+rcgen = { version = "0.11.2", features = ["pem", "x509-parser"] }
+ring = "0.16.20"
+rand = "0.8.5"
+rsa = "0.9.2"
+itertools = "0.11.0"
+argh = "0.1.12"
+pem = "3.0.2"
+x509-parser = { version = "0.15.1" }
+
+[dev-dependencies]
+assert_fs = "1.0.13"
+x509-parser = { version = "0.15.1", features = ["verify"] }
