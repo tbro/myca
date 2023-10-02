@@ -41,7 +41,7 @@ impl BuildCert {
         self.params.key_usages.push(KeyUsagePurpose::CrlSign);
         self
     }
-    pub fn end_entity(mut self) -> Self {
+    pub fn end_entity(mut self, client_auth: bool) -> Self {
         self.params.is_ca = IsCa::NoCa;
         let name = "viewd.host.home";
         self.params
@@ -50,7 +50,11 @@ impl BuildCert {
         self.params
             .distinguished_name
             .push(DnType::CommonName, name);
-        self
+	if client_auth {
+	    self.client_auth()
+	} else {
+	    self.server_auth()
+	}
     }
     pub fn client_auth(mut self) -> Self {
         let usage = ExtendedKeyUsagePurpose::ClientAuth;

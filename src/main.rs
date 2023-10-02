@@ -17,7 +17,7 @@ pub struct Cli {
     /// chain length (defaults to 2)
     pub length: usize,
     #[argh(switch, short = 'c')]
-    /// switch to ExtendedKeyUsage: clientAuth (default is serverAuth)
+    /// switch `ExtendedKeyUsage` to clientAuth (instead of the default: serverAuth)
     pub clientauth: bool,
     #[argh(option, short = 'p')]
     /// print contents of certificate instead of creating new ones
@@ -35,7 +35,7 @@ fn main() -> myca::Result<()> {
         let mut chain = CertChain::default();
         let ca = BuildCert::new().ca().build()?;
         chain.ca(ca)?;
-        let entity = BuildCert::new().end_entity().build()?;
+        let entity = BuildCert::new().end_entity(cli.clientauth).build()?;
         chain.end_entity(entity)?;
         let s = chain.serialize_items()?;
 	CertChain::write_to_dir(&cli.output, s.clone())?;

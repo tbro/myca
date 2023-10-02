@@ -1,24 +1,26 @@
 use itertools::Itertools;
-use rcgen::Certificate;
+use rcgen::{Certificate, RcgenError};
 use std::fs::File;
 use std::path::Path;
 
-#[derive(Default)]
-/// Struct to represent a Certificate Chain as a Vec of Certificates.
-pub struct CertChain {
-    chain: Vec<Certificate>,
-}
-
 #[derive(Debug, Clone)]
+/// Struct to represent a Serialized Cert/Key pair
 pub struct SerializedEntity {
     cert_pem: String,
     key_pem: Option<String>
 }
 
+#[derive(Default)]
+/// Struct to represent a Certificate Chain as a Vec of Certificates.
+pub struct CertChain {
+    chain: Vec<Certificate>,
+    initialized: bool
+}
+
 impl CertChain {
     /// Initialize the CertChain
     pub fn new() -> Self {
-        Self { chain: Vec::new() }
+        Self { chain: Vec::new(), initialized: false }
     }
     /// Add a CA to the chain. Can only be called on empty chain.
     pub fn ca(&mut self, ca: Certificate) -> crate::Result<&Self> {
