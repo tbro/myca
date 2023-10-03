@@ -1,5 +1,5 @@
 use itertools::Itertools;
-use rcgen::{Certificate, RcgenError};
+use rcgen::Certificate;
 use std::fs::File;
 use std::path::Path;
 
@@ -14,7 +14,6 @@ pub struct SerializedEntity {
 /// Struct to represent a Certificate Chain as a Vec of Certificates.
 pub struct CertChain {
     chain: Vec<Certificate>,
-    initialized: bool,
 }
 
 impl CertChain {
@@ -22,7 +21,6 @@ impl CertChain {
     pub fn new() -> Self {
         Self {
             chain: Vec::new(),
-            initialized: false,
         }
     }
     /// Add a CA to the chain. Can only be called on empty chain.
