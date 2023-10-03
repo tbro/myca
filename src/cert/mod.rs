@@ -41,7 +41,7 @@ impl BuildCert {
         self.params.key_usages.push(KeyUsagePurpose::CrlSign);
         self
     }
-    pub fn end_entity(mut self, client_auth: bool) -> Self {
+    pub fn end_entity(mut self) -> Self {
         self.params.is_ca = IsCa::NoCa;
         let name = "viewd.host.home";
         self.params
@@ -50,11 +50,7 @@ impl BuildCert {
         self.params
             .distinguished_name
             .push(DnType::CommonName, name);
-	if client_auth {
-	    self.client_auth()
-	} else {
-	    self.server_auth()
-	}
+        self
     }
     pub fn client_auth(mut self) -> Self {
         let usage = ExtendedKeyUsagePurpose::ClientAuth;
@@ -86,27 +82,12 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_cert_chain() -> Result<(), RcgenError> {
-        let ca = BuildCert::new().ca().build()?;
-        let entity = BuildCert::new().end_entity();
-        let entity_pem = entity.serialize_with_signer(&ca)?;
-        let entity_parsed = pem::parse(&entity_pem)?;
-        let der_serialized = entity_parsed.contents();
-        let ca_der = ca.serialize_der()?;
-        let (_, cert) = X509Certificate::from_der(der_serialized).unwrap();
-        let (_, ca) = X509Certificate::from_der(ca_der.as_bytes()).unwrap();
-        let verified = check_signature(&cert, &ca);
-        assert!(verified);
-
-        Ok(())
-    }
-    #[test]
     fn init_ca() {
         let cert = BuildCert::new().ca();
         assert_eq!(cert.params.is_ca, IsCa::Ca(BasicConstraints::Unconstrained))
     }
     #[test]
-    fn init_end_entity() {
+    fn init_client_end_entity() {
         let cert = BuildCert::new().end_entity().client_auth();
         assert_eq!(cert.params.is_ca, IsCa::NoCa);
         assert_eq!(
@@ -114,11 +95,13 @@ mod tests {
             vec![ExtendedKeyUsagePurpose::ClientAuth]
         );
     }
-
-    // pub fn check_signature(cert: &Certificate, issuer: &Certificate) -> bool {
-    pub fn check_signature(cert: &X509Certificate<'_>, issuer: &X509Certificate<'_>) -> bool {
-        let issuer_public_key = issuer.public_key();
-
-        cert.verify_signature(Some(issuer_public_key)).is_ok()
+    #[test]
+    fn init_server_end_entity() {
+        let cert = BuildCert::new().end_entity().server_auth();
+        assert_eq!(cert.params.is_ca, IsCa::NoCa);
+        assert_eq!(
+            cert.params.extended_key_usages,
+            vec![ExtendedKeyUsagePurpose::ServerAuth]
+        );
     }
 }

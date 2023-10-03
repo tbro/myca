@@ -7,20 +7,23 @@ use std::path::Path;
 /// Struct to represent a Serialized Cert/Key pair
 pub struct SerializedEntity {
     cert_pem: String,
-    key_pem: Option<String>
+    key_pem: Option<String>,
 }
 
 #[derive(Default)]
 /// Struct to represent a Certificate Chain as a Vec of Certificates.
 pub struct CertChain {
     chain: Vec<Certificate>,
-    initialized: bool
+    initialized: bool,
 }
 
 impl CertChain {
     /// Initialize the CertChain
     pub fn new() -> Self {
-        Self { chain: Vec::new(), initialized: false }
+        Self {
+            chain: Vec::new(),
+            initialized: false,
+        }
     }
     /// Add a CA to the chain. Can only be called on empty chain.
     pub fn ca(&mut self, ca: Certificate) -> crate::Result<&Self> {
@@ -45,13 +48,19 @@ impl CertChain {
         let mut v: Vec<SerializedEntity> = Vec::new();
         for (i, (signer, signee)) in self.chain.iter().tuple_windows().enumerate() {
             let signee_pem = signee.serialize_pem_with_signer(signer)?;
-	    let key_pem =  signee.serialize_private_key_pem();
+            let key_pem = signee.serialize_private_key_pem();
             let signer_pem = signer.serialize_pem()?;
-	    // this is meant to support chains longer than 2, but untested
-	    if i == 0 {
-		v.push(SerializedEntity{cert_pem: signer_pem, key_pem: None});
-	    }
-            v.push(SerializedEntity{cert_pem: signee_pem, key_pem: Some(key_pem)});
+            // this is meant to support chains longer than 2, but untested
+            if i == 0 {
+                v.push(SerializedEntity {
+                    cert_pem: signer_pem,
+                    key_pem: None,
+                });
+            }
+            v.push(SerializedEntity {
+                cert_pem: signee_pem,
+                key_pem: Some(key_pem),
+            });
         }
         Ok(v)
     }
@@ -70,11 +79,11 @@ impl CertChain {
             };
             let mut output = File::create(cert_path)?;
             write!(output, "{}", entity.cert_pem)?;
-	    if let Some(key) = entity.key_pem.clone() {
-		let path = key_path.join("signing.key.pem");
-		let mut output = File::create(path)?;
-		write!(output, "{}", key)?;
-	    }
+            if let Some(key) = entity.key_pem.clone() {
+                let path = key_path.join("signing.key.pem");
+                let mut output = File::create(path)?;
+                write!(output, "{}", key)?;
+            }
         }
         Ok(())
     }
@@ -82,6 +91,8 @@ impl CertChain {
 
 #[cfg(test)]
 mod tests {
+    use std::fs;
+
     use pem::{Pem, PemError};
     use x509_parser::prelude::{FromDer, X509Certificate, X509Error};
 
@@ -137,10 +148,10 @@ mod tests {
 
         CertChain::write_to_dir(path, s.clone())?;
         // assert file creation contents
-	let ca_entity = s.get(0).unwrap();
-	let end_entity = s.get(1).unwrap();
+        let ca_entity = s.get(0).unwrap();
+        let end_entity = s.get(1).unwrap();
         ca_file.assert(ca_entity.cert_pem.as_str());
-        key_file.assert(ca_entity.key_pem.clone().expect("missing key file").as_str());
+        key_file.assert(end_entity.key_pem.clone().unwrap().as_str());
         cert_file.assert(end_entity.cert_pem.as_str());
 
         Ok(())

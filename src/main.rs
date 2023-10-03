@@ -35,10 +35,16 @@ fn main() -> myca::Result<()> {
         let mut chain = CertChain::default();
         let ca = BuildCert::new().ca().build()?;
         chain.ca(ca)?;
-        let entity = BuildCert::new().end_entity(cli.clientauth).build()?;
-        chain.end_entity(entity)?;
+        // the underlying CertificateParams type is forcing the `mut`
+        let mut entity = BuildCert::new().end_entity();
+        if cli.clientauth {
+            entity = entity.client_auth();
+        } else {
+            entity = entity.server_auth();
+        }
+        chain.end_entity(entity.build()?)?;
         let s = chain.serialize_items()?;
-	CertChain::write_to_dir(&cli.output, s.clone())?;
+        CertChain::write_to_dir(&cli.output, s.clone())?;
     }
 
     Ok(())
