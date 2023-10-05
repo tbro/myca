@@ -4,7 +4,7 @@ use std::{
 };
 
 use argh::FromArgs;
-use myca::{BuildCert, CertChain};
+use myca::{BuildParams, Cert, CertChain};
 use x509_parser::prelude::{FromDer, X509Certificate};
 
 #[derive(FromArgs, PartialEq, Debug)]
@@ -19,6 +19,17 @@ pub struct Cli {
     #[argh(switch, short = 'c')]
     /// switch `ExtendedKeyUsage` to clientAuth (instead of the default: serverAuth)
     pub clientauth: bool,
+    #[argh(option, short = 'd', default = "String::from(\"my.host.home\")")]
+    /// fqdn of end-entity (will be used in certificate validation)
+    pub dnsname: String,
+    #[argh(
+        option,
+        short = 's',
+        default = "String::from(\"pkcs_ecdsa_p256_sha256\")"
+    )]
+    /// signature algorithm (default: "pkcs_ecdsa_p256_sha256"),
+    /// options: ["pkcs_ecdsa_p256_sha256", "pkcs_rsa_sha256", "pkcs_ed25519"]
+    pub sig_algo: String,
     #[argh(option, short = 'p')]
     /// print contents of certificate instead of creating new ones
     pub parse: Option<PathBuf>,
@@ -32,18 +43,18 @@ fn main() -> myca::Result<()> {
         let (_, cert) = X509Certificate::from_der(parsed.contents()).unwrap();
         println!("{:#?}", cert);
     } else {
-        let mut chain = CertChain::default();
-        let ca = BuildCert::new().ca().build()?;
-        chain.ca(ca)?;
-        // the underlying CertificateParams type is forcing the `mut`
-        let mut entity = BuildCert::new().end_entity();
+        let ca = BuildParams::new().with_alg(&cli.sig_algo)?.ca().build()?;
+        let chain = CertChain::new(Some(ca))?;
+        let mut entity = BuildParams::new()
+            .with_alg(&cli.sig_algo)?
+            .end_entity()
+            .dns_name(&cli.dnsname);
         if cli.clientauth {
             entity = entity.client_auth();
         } else {
             entity = entity.server_auth();
         }
-        chain.end_entity(entity.build()?)?;
-        let s = chain.serialize_items()?;
+        let s = chain.end(entity.build().ok())?.serialize()?;
         CertChain::write_to_dir(&cli.output, s.clone())?;
     }
 
