@@ -37,7 +37,7 @@ any x509 certificate) contents.
   * pkcs\_ed25519
   * **more to come**
 
-#### Why can't my client can't authenticate with server?
+#### Why can't my client authenticate with server?
 
 Make sure you pass `--clientauth` when generating certificate for
 client authentication.
