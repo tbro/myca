@@ -11,6 +11,7 @@ improve so use with caution.
 ## features
 
   * easy
+  * tested
   * flexible
 
 ## usage
@@ -27,6 +28,10 @@ You can then use this same tool to view the output certificate's (or
 any x509 certificate) contents.
 
 	myca --parse path/to/cert.pem
+
+For complete list of supported options:
+
+	myca --help
 
 ## FAQ
 
@@ -53,12 +58,8 @@ think about it and ask again later.
 Self-signed certificates are great, but they don't allow you to test
 authentication. Openssl wrapped in bash is great, but you have to know
 many things to output a valid certificate chain. As your application
-evolves, you may find your collection of bash scripts has grows with
-it. This tool is mean to be easy enough to generate a valid
-certificate chain by only supplying a directory to output them into,
-and flexible enough that you can easily modify the parameters you
-need.
-
-## help
-
-	myca --help
+evolves, your collection of bash scripts may become large and
+difficult to maintain. This tool is mean to be easy enough to generate
+a valid certificate chain by only supplying a directory to output them
+into, and flexible enough that you can easily modify the parameters
+you need.
