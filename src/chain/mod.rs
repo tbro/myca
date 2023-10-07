@@ -33,7 +33,7 @@ impl TerminatedChain {
     }
 }
 
-/// Struct to represent an initialized Certificate Chain that holds
+/// Struct to initialize the build of a Certificate Chain that holds
 /// only a `Ca`.
 pub struct CertChain(Ca);
 

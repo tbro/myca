@@ -4,7 +4,7 @@ use super::ca::CaParams;
 use super::entity::EndEntityParams;
 use super::signature::Signature;
 
-/// Builder to configure `CertificateParams`
+/// Builder to configure TLS [CertificateParams]
 pub struct BuildParams {
     params: CertificateParams,
 }
