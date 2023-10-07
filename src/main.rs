@@ -4,7 +4,7 @@ use std::{
 };
 
 use argh::FromArgs;
-use myca::{BuildParams, Cert, CertChain};
+use myca::{BuildParams, CertChain};
 use x509_parser::prelude::{FromDer, X509Certificate};
 
 #[derive(FromArgs, PartialEq, Debug)]

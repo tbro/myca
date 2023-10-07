@@ -33,13 +33,6 @@ impl TerminatedChain {
     }
 }
 
-pub struct SerializedChain {
-    chain: Vec<SerializedEntity>,
-}
-impl SerializedChain {
-    // pub fn write_to_path()
-}
-
 /// Struct to represent an initialized Certificate Chain that holds
 /// only a `Ca`.
 pub struct CertChain(Ca);
