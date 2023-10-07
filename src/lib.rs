@@ -1,5 +1,5 @@
 mod cert;
-pub use cert::{BuildParams, Cert};
+pub use cert::BuildParams;
 mod chain;
 pub use chain::CertChain;
 
