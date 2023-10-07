@@ -1,10 +1,55 @@
+use std::fmt::Display;
+
+#[derive(Debug)]
+pub enum KeyGenerationError {
+    Unspecified(ring::error::Unspecified),
+    UnsupportedAlgorithm,
+    RcgenError(rcgen::RcgenError),
+    Pkcs8Error(rsa::pkcs8::Error),
+    RsaError(rsa::Error),
+}
+
+impl Display for KeyGenerationError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            KeyGenerationError::Unspecified(u) => write!(f, "{}", u),
+            KeyGenerationError::UnsupportedAlgorithm => write!(f, ""),
+            KeyGenerationError::RcgenError(e) => write!(f, "{}", e),
+            KeyGenerationError::Pkcs8Error(e) => write!(f, "{}", e),
+            KeyGenerationError::RsaError(e) => write!(f, "{}", e),
+        }
+    }
+}
+
+impl std::error::Error for KeyGenerationError {}
+
+impl From<rcgen::RcgenError> for KeyGenerationError {
+    fn from(err: rcgen::RcgenError) -> Self {
+        KeyGenerationError::RcgenError(err)
+    }
+}
+impl From<ring::error::Unspecified> for KeyGenerationError {
+    fn from(err: ring::error::Unspecified) -> Self {
+        KeyGenerationError::Unspecified(err)
+    }
+}
+impl From<rsa::pkcs8::Error> for KeyGenerationError {
+    fn from(err: rsa::pkcs8::Error) -> Self {
+        KeyGenerationError::Pkcs8Error(err)
+    }
+}
+impl From<rsa::Error> for KeyGenerationError {
+    fn from(err: rsa::Error) -> Self {
+        KeyGenerationError::RsaError(err)
+    }
+}
 pub struct Signature<'a> {
     pub alg: &'a rcgen::SignatureAlgorithm,
     pub key_pair: rcgen::KeyPair,
 }
 
 impl Signature<'_> {
-    pub fn new(s: &str) -> crate::Result<Self> {
+    pub fn new(s: &str) -> Result<Self, KeyGenerationError> {
         match s.to_lowercase().as_str() {
             "pkcs_rsa_sha256" => Self::pkcs_rsa_sha256(),
             //     "PKCS_RSA_SHA384"
@@ -13,23 +58,23 @@ impl Signature<'_> {
             "pkcs_ecdsa_p256_sha256" => Self::pkcs_ecdsa_p256_sha256(),
             // 	"PKCS_ECDSA_P384_SHA384"
             "pkcs_ed25519" => Self::pkcs_ed25519(),
-            &_ => todo!(),
+            &_ => Err(KeyGenerationError::UnsupportedAlgorithm),
         }
     }
-    pub fn pkcs_ed25519() -> crate::Result<Self> {
+    pub fn pkcs_ed25519() -> Result<Self, KeyGenerationError> {
         use ring::signature::Ed25519KeyPair;
 
         let rng = ring::rand::SystemRandom::new();
         let alg = &rcgen::PKCS_ECDSA_P256_SHA256;
         #[rustfmt::skip]
-        let pkcs8_bytes = Ed25519KeyPair::generate_pkcs8(&rng).expect("Could not generated pkcs8 keypair");
+        let pkcs8_bytes = Ed25519KeyPair::generate_pkcs8(&rng)?;
 
         let key_pair = rcgen::KeyPair::try_from(pkcs8_bytes.as_ref())?;
 
         Ok(Self { alg, key_pair })
     }
 
-    pub fn pkcs_rsa_sha256() -> crate::Result<Self> {
+    pub fn pkcs_rsa_sha256() -> Result<Self, KeyGenerationError> {
         use rand::rngs::OsRng;
         use rsa::{pkcs8::EncodePrivateKey, RsaPrivateKey};
 
@@ -43,14 +88,14 @@ impl Signature<'_> {
 
         Ok(Self { alg, key_pair })
     }
-    pub fn pkcs_ecdsa_p256_sha256() -> crate::Result<Self> {
+    pub fn pkcs_ecdsa_p256_sha256() -> Result<Self, KeyGenerationError> {
         use ring::signature::EcdsaKeyPair;
         use ring::signature::ECDSA_P256_SHA256_ASN1_SIGNING;
 
         let rng = ring::rand::SystemRandom::new();
         let alg = &rcgen::PKCS_ECDSA_P256_SHA256;
         #[rustfmt::skip]
-        let pkcs8_bytes = EcdsaKeyPair::generate_pkcs8(&ECDSA_P256_SHA256_ASN1_SIGNING, &rng).expect("Could not generated pkcs8 keypair");
+        let pkcs8_bytes = EcdsaKeyPair::generate_pkcs8(&ECDSA_P256_SHA256_ASN1_SIGNING, &rng)?;
 
         let key_pair = rcgen::KeyPair::try_from(pkcs8_bytes.as_ref())?;
 
