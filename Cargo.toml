@@ -2,8 +2,14 @@
 name = "myca"
 version = "0.1.0"
 edition = "2021"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+license-file = "LICENSE"
+authors = ["tbro", "tbro <tbro@users.noreply.github.com>"]
+description = "TLS certificate chain generator."
+readme = "README.md"
+homepage = "https://github.com/tbro/myca/"
+repository = "https://github.com/tbro/myca/"
+keywords = ["tls", "ca", "mkcert", "certificate"]
+categories = ["command-line-utilities", "cryptography", "authentication"]
 
 [dependencies]
 rcgen = { version = "0.11.2", features = ["pem", "x509-parser"] }
