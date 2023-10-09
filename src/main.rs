@@ -28,7 +28,7 @@ pub struct Cli {
         default = "String::from(\"pkcs_ecdsa_p256_sha256\")"
     )]
     /// signature algorithm (default: "pkcs_ecdsa_p256_sha256"),
-    /// options: ["pkcs_ecdsa_p256_sha256", "pkcs_rsa_sha256", "pkcs_ed25519"]
+    /// options: "pkcs_ecdsa_p256_sha256", "pkcs_ecdsa_p384_sha384", "pkcs_ed25519", "pkcs_rsa_sha256", "pkcs_rsa_sha384", "pkcs_rsa_sha512"
     pub sig_algo: String,
     #[argh(option, short = 'p')]
     /// print contents of certificate instead of creating new ones

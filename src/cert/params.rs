@@ -109,6 +109,26 @@ mod tests {
         Ok(())
     }
     #[test]
+    fn serialize_end_entity_ecdsa_p384_sha384_sig() -> crate::Result<()> {
+        let ca = BuildParams::new().ca().build()?;
+        let end_entity = BuildParams::new()
+            .with_alg("PKCS_ECDSA_P384_SHA384")?
+            .end_entity()
+            .build()?
+            .serialize(Some(ca.cert()))?;
+
+        let der = pem::parse(end_entity.cert_pem)?;
+        let (_, cert) = X509Certificate::from_der(der.contents())?;
+
+        let issuer_der = pem::parse(ca.serialize(None)?.cert_pem)?;
+        let (_, issuer) = X509Certificate::from_der(issuer_der.contents())?;
+
+        let verified = check_signature(&cert, &issuer);
+        assert!(verified);
+        Ok(())
+    }
+
+    #[test]
     fn serialize_end_entity_ed25519_sig() -> crate::Result<()> {
         let ca = BuildParams::new().ca().build()?;
         let end_entity = BuildParams::new()
@@ -128,7 +148,7 @@ mod tests {
         Ok(())
     }
     #[test]
-    fn serialize_end_entity_rsa_sig() -> crate::Result<()> {
+    fn serialize_end_entity_rsa_256_sig() -> crate::Result<()> {
         let ca = BuildParams::new().ca().build()?;
         let end_entity = BuildParams::new()
             .with_alg("PKCS_RSA_SHA256")?
@@ -146,7 +166,44 @@ mod tests {
         assert!(verified);
         Ok(())
     }
+    #[test]
+    fn serialize_end_entity_rsa_384_sig() -> crate::Result<()> {
+        let ca = BuildParams::new().ca().build()?;
+        let end_entity = BuildParams::new()
+            .with_alg("PKCS_RSA_SHA384")?
+            .end_entity()
+            .build()?
+            .serialize(Some(ca.cert()))?;
 
+        let der = pem::parse(end_entity.cert_pem)?;
+        let (_, cert) = X509Certificate::from_der(der.contents())?;
+
+        let issuer_der = pem::parse(ca.serialize(None)?.cert_pem)?;
+        let (_, issuer) = X509Certificate::from_der(issuer_der.contents())?;
+
+        let verified = check_signature(&cert, &issuer);
+        assert!(verified);
+        Ok(())
+    }
+    #[test]
+    fn serialize_end_entity_rsa_512_sig() -> crate::Result<()> {
+        let ca = BuildParams::new().ca().build()?;
+        let end_entity = BuildParams::new()
+            .with_alg("PKCS_RSA_SHA512")?
+            .end_entity()
+            .build()?
+            .serialize(Some(ca.cert()))?;
+
+        let der = pem::parse(end_entity.cert_pem)?;
+        let (_, cert) = X509Certificate::from_der(der.contents())?;
+
+        let issuer_der = pem::parse(ca.serialize(None)?.cert_pem)?;
+        let (_, issuer) = X509Certificate::from_der(issuer_der.contents())?;
+
+        let verified = check_signature(&cert, &issuer);
+        assert!(verified);
+        Ok(())
+    }
     pub fn check_signature(cert: &X509Certificate<'_>, issuer: &X509Certificate<'_>) -> bool {
         let issuer_public_key = issuer.public_key();
         cert.verify_signature(Some(issuer_public_key)).is_ok()

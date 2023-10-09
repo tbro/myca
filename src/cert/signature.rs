@@ -52,11 +52,11 @@ impl Signature<'_> {
     pub fn new(s: &str) -> Result<Self, KeyGenerationError> {
         match s.to_lowercase().as_str() {
             "pkcs_rsa_sha256" => Self::pkcs_rsa_sha256(),
-            //     "PKCS_RSA_SHA384"
-            // 	"PKCS_RSA_SHA512"
+            "pkcs_rsa_sha384" => Self::pkcs_rsa_sha384(),
+            "pkcs_rsa_sha512" => Self::pkcs_rsa_sha512(),
             // 	"PKCS_RSA_PSS_SHA256"
             "pkcs_ecdsa_p256_sha256" => Self::pkcs_ecdsa_p256_sha256(),
-            // 	"PKCS_ECDSA_P384_SHA384"
+            "pkcs_ecdsa_p384_sha384" => Self::pkcs_ecdsa_p384_sha384(),
             "pkcs_ed25519" => Self::pkcs_ed25519(),
             &_ => Err(KeyGenerationError::UnsupportedAlgorithm),
         }
@@ -65,11 +65,11 @@ impl Signature<'_> {
         use ring::signature::Ed25519KeyPair;
 
         let rng = ring::rand::SystemRandom::new();
-        let alg = &rcgen::PKCS_ECDSA_P256_SHA256;
+        let alg = &rcgen::PKCS_ED25519;
         #[rustfmt::skip]
         let pkcs8_bytes = Ed25519KeyPair::generate_pkcs8(&rng)?;
 
-        let key_pair = rcgen::KeyPair::try_from(pkcs8_bytes.as_ref())?;
+        let key_pair = rcgen::KeyPair::from_der_and_sign_algo(pkcs8_bytes.as_ref(), alg)?;
 
         Ok(Self { alg, key_pair })
     }
@@ -79,12 +79,37 @@ impl Signature<'_> {
         use rsa::{pkcs8::EncodePrivateKey, RsaPrivateKey};
 
         let alg = &rcgen::PKCS_RSA_SHA256;
-        // TODO review if ring::rand::SystemRandom should/can be used here
         let mut rng = OsRng;
         let bits = 2048;
         let private_key = RsaPrivateKey::new(&mut rng, bits)?;
         let private_key_der = private_key.to_pkcs8_der()?;
-        let key_pair = rcgen::KeyPair::try_from(private_key_der.as_bytes())?;
+        let key_pair = rcgen::KeyPair::from_der_and_sign_algo(private_key_der.as_bytes(), alg)?;
+
+        Ok(Self { alg, key_pair })
+    }
+    pub fn pkcs_rsa_sha384() -> Result<Self, KeyGenerationError> {
+        use rand::rngs::OsRng;
+        use rsa::{pkcs8::EncodePrivateKey, RsaPrivateKey};
+
+        let alg = &rcgen::PKCS_RSA_SHA384;
+        let mut rng = OsRng;
+        let bits = 3072;
+        let private_key = RsaPrivateKey::new(&mut rng, bits)?;
+        let private_key_der = private_key.to_pkcs8_der()?;
+        let key_pair = rcgen::KeyPair::from_der_and_sign_algo(private_key_der.as_bytes(), alg)?;
+
+        Ok(Self { alg, key_pair })
+    }
+    pub fn pkcs_rsa_sha512() -> Result<Self, KeyGenerationError> {
+        use rand::rngs::OsRng;
+        use rsa::{pkcs8::EncodePrivateKey, RsaPrivateKey};
+
+        let alg = &rcgen::PKCS_RSA_SHA512;
+        let mut rng = OsRng;
+        let bits = 4096;
+        let private_key = RsaPrivateKey::new(&mut rng, bits)?;
+        let private_key_der = private_key.to_pkcs8_der()?;
+        let key_pair = rcgen::KeyPair::from_der_and_sign_algo(private_key_der.as_bytes(), alg)?;
 
         Ok(Self { alg, key_pair })
     }
@@ -97,7 +122,20 @@ impl Signature<'_> {
         #[rustfmt::skip]
         let pkcs8_bytes = EcdsaKeyPair::generate_pkcs8(&ECDSA_P256_SHA256_ASN1_SIGNING, &rng)?;
 
-        let key_pair = rcgen::KeyPair::try_from(pkcs8_bytes.as_ref())?;
+        let key_pair = rcgen::KeyPair::from_der_and_sign_algo(pkcs8_bytes.as_ref(), alg)?;
+
+        Ok(Self { alg, key_pair })
+    }
+    pub fn pkcs_ecdsa_p384_sha384() -> Result<Self, KeyGenerationError> {
+        use ring::signature::EcdsaKeyPair;
+        use ring::signature::ECDSA_P384_SHA384_ASN1_SIGNING;
+
+        let rng = ring::rand::SystemRandom::new();
+        let alg = &rcgen::PKCS_ECDSA_P384_SHA384;
+        #[rustfmt::skip]
+        let pkcs8_bytes = EcdsaKeyPair::generate_pkcs8(&ECDSA_P384_SHA384_ASN1_SIGNING, &rng)?;
+
+        let key_pair = rcgen::KeyPair::from_der_and_sign_algo(pkcs8_bytes.as_ref(), alg)?;
 
         Ok(Self { alg, key_pair })
     }
@@ -110,11 +148,10 @@ mod tests {
     #[test]
     fn signature_pkcs_ed25519() -> crate::Result<()> {
         let sig = Signature::new("pkcs_ed25519")?;
-        assert_eq!(format!("{:?}", sig.alg), "PKCS_ECDSA_P256_SHA256");
+        assert_eq!(format!("{:?}", sig.alg), "PKCS_ED25519");
         assert_eq!(format!("{:?}", sig.key_pair.algorithm()), "PKCS_ED25519");
         Ok(())
     }
-
     #[test]
     fn signature_pkcs_ecdsa_p256_sha256() -> crate::Result<()> {
         let sig = Signature::new("PKCS_ECDSA_P256_SHA256")?;
@@ -125,12 +162,35 @@ mod tests {
         );
         Ok(())
     }
-
+    #[test]
+    fn signature_pkcs_ecdsa_p384_sha384() -> crate::Result<()> {
+        let sig = Signature::new("PKCS_ECDSA_P384_SHA384")?;
+        assert_eq!(format!("{:?}", sig.alg), "PKCS_ECDSA_P384_SHA384");
+        assert_eq!(
+            format!("{:?}", sig.key_pair.algorithm()),
+            "PKCS_ECDSA_P384_SHA384"
+        );
+        Ok(())
+    }
     #[test]
     fn signature_pkcs_rsa_sha256() -> crate::Result<()> {
         let sig = Signature::new("PKCS_RSA_SHA256")?;
         assert_eq!(format!("{:?}", sig.alg), "PKCS_RSA_SHA256");
         assert_eq!(format!("{:?}", sig.key_pair.algorithm()), "PKCS_RSA_SHA256");
+        Ok(())
+    }
+    #[test]
+    fn signature_pkcs_rsa_sha384() -> crate::Result<()> {
+        let sig = Signature::new("PKCS_RSA_SHA384")?;
+        assert_eq!(format!("{:?}", sig.alg), "PKCS_RSA_SHA384");
+        assert_eq!(format!("{:?}", sig.key_pair.algorithm()), "PKCS_RSA_SHA384");
+        Ok(())
+    }
+    #[test]
+    fn signature_pkcs_rsa_sha512() -> crate::Result<()> {
+        let sig = Signature::new("PKCS_RSA_SHA512")?;
+        assert_eq!(format!("{:?}", sig.alg), "PKCS_RSA_SHA512");
+        assert_eq!(format!("{:?}", sig.key_pair.algorithm()), "PKCS_RSA_SHA512");
         Ok(())
     }
 }
