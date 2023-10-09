@@ -52,10 +52,12 @@ For complete list of supported options:
 
 #### What signature schemes are available?
 
-  * pkcs\_rsa\_sha256
   * pkcs\_ecdsa\_p256\_sha256
+  * pkcs\_ecdsa\_p384\_sha384
   * pkcs\_ed25519
-  * **more to come**
+  * pkcs\_rsa\_sha256
+  * pkcs\_rsa\_sha384
+  * pkcs\_rsa\_sha512
 
 #### Why can't my client authenticate with server?
 
