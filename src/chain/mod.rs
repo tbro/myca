@@ -6,11 +6,7 @@ use crate::{
     cert::{Ca, Cert, EndEntity, SerializedEntity},
     BuildParams,
 };
-/// Chain that has been finalized by adding an end-entity. Note that
-/// if we wanted a more complex application that stored chains and
-/// allowed updates to them, we might want a tree structure. But for
-/// fire-and-forget scenarios like this app is meant to support, we
-/// just need a temporary vector.
+/// Chain that has been finalized by adding an end-entity.
 pub struct TerminatedChain {
     chain: Vec<Box<dyn Cert>>,
 }
@@ -48,7 +44,7 @@ impl CertChain {
         }
     }
 
-    /// Add an entity to the chain. Can only be called on a non-empty chain.
+    /// Add an entity to the chain. Returns [TerminatedChain].
     pub fn end(self, entity: Option<EndEntity>) -> crate::Result<TerminatedChain> {
         let mut chain: Vec<Box<dyn Cert>> = vec![Box::new(self.0)];
         if let Some(entity) = entity {
@@ -63,7 +59,7 @@ impl CertChain {
     pub fn write_to_dir(dir: &Path, mut chain: Vec<SerializedEntity>) -> crate::Result<()> {
         use std::io::Write;
 
-        // first serialize end-entity.
+        // first save end-entity.
         chain.pop().iter().try_for_each(|e| {
             let cert_path = dir.join("cert.pem");
             let key_path = dir.join("cert.key.pem");
@@ -76,7 +72,7 @@ impl CertChain {
 
         let intermediats = chain.split_off(1);
 
-        // first serialize Ca
+        // save Ca
         chain.iter().try_for_each(|e| {
             let cert_path = dir.join("root-ca.pem");
             let key_path = dir.join("root-ca.key.pem");

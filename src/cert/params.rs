@@ -4,7 +4,8 @@ use super::ca::CaParams;
 use super::entity::EndEntityParams;
 use super::signature::Signature;
 
-/// Builder to configure TLS [CertificateParams]
+/// Builder to configure TLS [CertificateParams] to be finalized
+/// into either a Ca or an End-Entity.
 pub struct BuildParams {
     params: CertificateParams,
 }
@@ -16,12 +17,22 @@ impl Default for BuildParams {
 }
 
 impl BuildParams {
-    /// Initialize `CertificateParams` with (hopefully) sane defaults
+    /// Initialize `CertificateParams` with defaults
+    /// # Example
+    /// ```
+    /// # use myca::BuildParams;
+    /// let cert = BuildParams::new();
+    /// ```
     pub fn new() -> Self {
         let params = CertificateParams::default();
         Self { params }
     }
-    /// Set signature algorithm (instead of default)
+    /// Set signature algorithm (instead of default). Returns `crate::Result<Self>`.
+    /// # Example
+    /// ```
+    /// # use myca::BuildParams;
+    /// let cert = BuildParams::new().with_alg("pkcs_ed25519");
+    /// ```
     pub fn with_alg(mut self, alg: &str) -> crate::Result<Self> {
         let sig = Signature::new(alg)?;
         self.params.alg = sig.key_pair.algorithm();
@@ -30,6 +41,11 @@ impl BuildParams {
     }
     /// Set options for generating a CA cert. In this setup
     /// CA = ROOT (CA certs are self-signed).
+    /// # Example
+    /// ```
+    /// # use myca::BuildParams;
+    /// let cert = BuildParams::new().ca();
+    /// ```
     pub fn ca(mut self) -> CaParams {
         self.params.is_ca = IsCa::Ca(BasicConstraints::Unconstrained);
         self.params

@@ -1,12 +1,10 @@
 # myca
 
 My CA is a developer tool to generate TLS certificate chains. It is
-meant to be used in developers workflow, and can currently generate
+meant to be used in developer workflow, and can currently generate
 certificate chain consisting of 1 Root CA and 1 end-entity
-certificate, along with end-entity's private key. End-entity will be
-signed by Root CA. These have been shown to function with rustls
-validation, verification and encryption, but there is still much to
-improve so use with caution.
+certificate, along with private keys. End-entity will be
+signed by Root CA.
 
 ## features
 
@@ -14,11 +12,28 @@ improve so use with caution.
   * tested
   * flexible
 
+## installation
+Easiest method is currently `cargo install myca`. You can also clone
+this repo and build it with `cargo build`.
+
 ## usage
 Having compiled the binary you can simply pass a path to output
 generated files.
 
 	myca -o output/dir/
+
+I the output directory you will find these files:
+
+  * `cert.pem`  (end-entity's X509 certficate, signed by `root-ca`'s key)
+  * `cert.key.pem` (end-entity's private key)
+  * `root-ca.pem` (ca's self-signed x509 certificate)
+  * `root-ca.key.pem` (ca's private key)
+
+The `root-ca.key.pem` is only present in case you want to do something
+later with it like sign more end-entity certficates. If you plan on
+using these files as anything more than temporary throw away secrets
+for testing/development, you should be very careful what you do with
+it. If you don't need it, destroy it.
 
 or with `cargo run`
 
