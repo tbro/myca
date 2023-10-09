@@ -24,13 +24,13 @@ generated files.
 
 I the output directory you will find these files:
 
-  * `cert.pem`  (end-entity's X509 certficate, signed by `root-ca`'s key)
+  * `cert.pem`  (end-entity's X509 certificate, signed by `root-ca`'s key)
   * `cert.key.pem` (end-entity's private key)
   * `root-ca.pem` (ca's self-signed x509 certificate)
   * `root-ca.key.pem` (ca's private key)
 
 The `root-ca.key.pem` is only present in case you want to do something
-later with it like sign more end-entity certficates. If you plan on
+later with it like sign more end-entity certificates. If you plan on
 using these files as anything more than temporary throw away secrets
 for testing/development, you should be very careful what you do with
 it. If you don't need it, destroy it.
