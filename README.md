@@ -1,5 +1,7 @@
 # myca
 
+> This was a small project, an improved version of which was included in [rcgen](https://github.com/rustls/rcgen/tree/main/rustls-cert-gen). You should use that instead of this.
+
 My CA is a developer tool to generate TLS certificate chains. It is
 meant to be used in developer workflow, and can currently generate
 certificate chain consisting of 1 Root CA and 1 end-entity
